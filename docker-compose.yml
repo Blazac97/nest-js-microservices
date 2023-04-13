@@ -1,0 +1,74 @@
+version: '3.9'
+services:
+  profiles:
+    build:
+      context: .
+      dockerfile: ./apps/profiles/Dockerfile
+      target: development
+    command: >
+      sh -c "yarn prisma:generate:profiles && yarn prisma:migrate:deploy:profiles && yarn start:dev profiles"
+    env_file:
+      - ./apps/profiles/prisma/.env
+      - ./apps/profiles/.env
+    depends_on:
+      - postgres
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3000:3000'
+    networks:
+      - default
+
+  auth:
+    build:
+      context: .
+      dockerfile: ./apps/auth/Dockerfile
+      target: development
+    command: >
+      sh -c "yarn prisma:generate:auth && yarn prisma:migrate:deploy:auth && yarn start:dev auth"
+    env_file:
+      - ./apps/auth/prisma/.env
+      - ./apps/auth/.env
+    depends_on:
+      - postgres
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3001:3001'
+    networks:
+      - default
+
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - '5672:5672'
+    networks:
+      default:
+
+  postgres:
+    image: postgres:latest
+    environment:
+      # POSTGRES_DB: 'nest-js-microservices'
+      POSTGRES_USER: 'root'
+      POSTGRES_PASSWORD: 'root'
+    ports:
+      - '5432:5432'
+    networks:
+      - default
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - '5050:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@root.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    networks:
+      - default
+
+networks:
+  default:

@@ -1,17 +1,19 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { RegisterDto } from './dto/register.dto';
+import { ValidationFilter } from './filters/validation.filter';
 
 @Controller()
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
-  @Post('auth/register')
+  @Post('api/auth/register')
+  @UseFilters(new ValidationFilter())
   register(@Body() body: RegisterDto) {
     return this.profilesService.create(body);
   }
 
-  @Post('auth/login')
+  @Post('api/auth/login')
   login() {
     return null;
   }

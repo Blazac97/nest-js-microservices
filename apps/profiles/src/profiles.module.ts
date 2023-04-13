@@ -5,7 +5,7 @@ import { ProfilesService } from './profiles.service';
 import { PrismaModule } from './prisma';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
-import { RmqModule } from '@app/common';
+import { AuthModule, RmqModule } from '@app/common';
 import { AUTH_SERVICE } from './constants/services';
 
 @Module({
@@ -19,6 +19,7 @@ import { AUTH_SERVICE } from './constants/services';
       envFilePath: './apps/profiles/.env',
     }),
     RmqModule.register({ name: AUTH_SERVICE }),
+    AuthModule,
   ],
   controllers: [ProfilesController],
   providers: [ProfilesService],

@@ -1,26 +1,41 @@
 // Создаём сервис для работы с профилями.
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Profile } from './prisma/client';
 import { PrismaService, PrismaException } from './prisma';
 import { RegisterDto } from './dto/register.dto';
 
+import { AUTH_SERVICE } from './constants/services';
+import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom, lastValueFrom, tap } from 'rxjs';
+
 @Injectable()
 export class ProfilesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(AUTH_SERVICE) private authClient: ClientProxy
+  ) {}
   // Метод для созадния профиля, помимо этого создаётся и user.
   async create(data: RegisterDto) {
-    const createdUser = { id: 0 };
+    const { user: createdUser, access_token } = (await firstValueFrom(
+      this.authClient.send('register', {
+        email: data.email,
+        password: data.password,
+      })
+    )) as { user: any; access_token: string };
     const createdProfile = await this.prisma.profile.create({
       data: {
-        ...data,
+        name: data.name,
+        lastName: data.lastName,
+        address: data.address,
+        phone: data.phone,
         userId: createdUser.id,
       },
     });
     const response = {
       profile: createdProfile,
       user: createdUser,
+      access_token,
     };
-    // TODO: CREATE USER!
     delete response['user']['password'];
     return response;
   }
